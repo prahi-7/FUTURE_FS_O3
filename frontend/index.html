@@ -231,7 +231,7 @@
         function adminLogout() { isAdminLoggedIn = false; sessionStorage.removeItem('adminLoggedIn'); document.getElementById('navAdminLogout').style.display = 'none'; showPage('home'); }
 
         async function loadDoctors() {
-            try { const r = await fetch(`${API_URL}/doctors`); const d = await r.json(); allDoctors = (d.success && d.data.length) ? d.data : getHardcodedDoctors(); } catch (e) { allDoctors = getHardcodedDoctors(); }
+            try { const r = await fetch(`${API_URL}/api/doctors`); const d = await r.json(); allDoctors = (d.success && d.data.length) ? d.data : getHardcodedDoctors(); } catch (e) { allDoctors = getHardcodedDoctors(); }
             renderDoctors('all');
         }
         function getHardcodedDoctors() { return [{ _id: '1', name: 'Dr. Rajesh Kumar', specialization: 'Cardiologist', department: 'Cardiology', experience: '15+ years', education: 'MBBS, MD - AIIMS Delhi', timings: 'Mon-Fri, 9AM-3PM', rating: 4.9 },{ _id: '2', name: 'Dr. Priya Sharma', specialization: 'Neurologist', department: 'Neurology', experience: '12+ years', education: 'MBBS, DM - PGI', timings: 'Tue-Sat, 10AM-4PM', rating: 4.8 },{ _id: '3', name: 'Dr. Amit Patel', specialization: 'Orthopedic Surgeon', department: 'Orthopedics', experience: '18+ years', education: 'MBBS, MS - KEM', timings: 'Mon-Thu, 8AM-2PM', rating: 4.9 },{ _id: '4', name: 'Dr. Sneha Reddy', specialization: 'Pediatrician', department: 'Pediatrics', experience: '10+ years', education: 'MBBS, MD - JIPMER', timings: 'Wed-Mon, 11AM-5PM', rating: 4.7 },{ _id: '5', name: 'Dr. Vikram Singh', specialization: 'Cardiologist', department: 'Cardiology', experience: '14+ years', education: 'MBBS, DM - AIIMS Delhi', timings: 'Mon-Fri, 11AM-7PM', rating: 4.8 },{ _id: '6', name: 'Dr. Ananya Gupta', specialization: 'Neurologist', department: 'Neurology', experience: '11+ years', education: 'MBBS, DM - NIMHANS', timings: 'Mon-Fri, 8AM-2PM', rating: 4.9 }]; }
@@ -250,7 +250,7 @@
             const timeSlotSelect = document.getElementById('timeSlot');
             if (!doctorId || !date || !timeSlotSelect) return;
             try {
-                const res = await fetch(`${API_URL}/doctors/${doctorId}/slots?date=${date}`);
+                const res = await fetch(`${API_URL}/api/doctors/${doctorId}/slots?date=${date}`);
                 const data = await res.json();
                 if (data.success) { timeSlotSelect.innerHTML = '<option value="">Select Time</option>'; data.data.availableSlots.length ? data.data.availableSlots.forEach(s => { timeSlotSelect.innerHTML += `<option value="${s}">${s}</option>`; }) : timeSlotSelect.innerHTML += '<option value="" disabled>No slots available</option>'; }
             } catch (e) {}
@@ -283,7 +283,7 @@
     
     // Save to backend as pending
     try {
-        await fetch(`${API_URL}/appointments`, { 
+        await fetch(`${API_URL}/api/appointments`, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ 
@@ -341,7 +341,7 @@
         loadDashboard();
     }
 }
-        async function submitContact(e) { e.preventDefault(); const f = e.target; try { await fetch(`${API_URL}/contacts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.querySelector('input').value, email: f.querySelectorAll('input')[1].value, message: f.querySelector('textarea').value }) }); } catch(er){} alert('✅ Sent!'); f.reset(); }
+        async function submitContact(e) { e.preventDefault(); const f = e.target; try { await fetch(`${API_URL}/api/contacts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.querySelector('input').value, email: f.querySelectorAll('input')[1].value, message: f.querySelector('textarea').value }) }); } catch(er){} alert('✅ Sent!'); f.reset(); }
 
         // ============ VIDEO CONSULTATION ============
         async function requestVideoConsult(e) {
@@ -366,7 +366,7 @@
         // ============ DASHBOARD ============
         async function loadDashboard() {
             try {
-                const [sr, ar] = await Promise.all([fetch(`${API_URL}/dashboard/stats`), fetch(`${API_URL}/appointments`)]);
+                const [sr, ar] = await Promise.all([fetch(`${API_URL}/api/dashboard/stats`), fetch(`${API_URL}/api/appointments`)]);
                 const s = await sr.json(), a = await ar.json();
                 if (s.success) { document.getElementById('totalAppointments').textContent = s.data.totalAppointments||0; document.getElementById('totalDoctors').textContent = s.data.totalDoctors||0; document.getElementById('totalPatients').textContent = s.data.totalPatients||0; document.getElementById('pendingAppointments').textContent = s.data.pendingAppointments||0; }
                 const tb = document.getElementById('dashboardTableBody');
@@ -375,9 +375,9 @@
         }
         async function updateStatus(id, status) {
             if (!confirm(`Are you sure?`)) return;
-            try { let r = await fetch(`${API_URL}/appointments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); let d = await r.json(); if (!d.success) { r = await fetch(`${API_URL}/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); d = await r.json(); } if (d.success) { loadDashboard(); } } catch(e) {}
+            try { let r = await fetch(`${API_URL}/api/appointments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); let d = await r.json(); if (!d.success) { r = await fetch(`${API_URL}/api/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }); d = await r.json(); } if (d.success) { loadDashboard(); } } catch(e) {}
         }
-        async function loadAdminDoctors() { const c = document.getElementById('adminDoctorsList'); c.innerHTML = '<p>Loading...</p>'; try { const r = await fetch(`${API_URL}/doctors`); const d = await r.json(); if (d.success) { allDoctors = d.data; c.innerHTML = allDoctors.map(x => `<div class="card" style="margin-bottom:0.5rem;cursor:pointer;display:flex;justify-content:space-between;" onclick="editDoctor('${x._id}')"><div><strong>${x.name}</strong><span style="color:var(--teal);margin-left:8px;">${x.specialization}</span></div><i class="fas fa-edit"></i></div>`).join(''); } } catch(e) {} }
+        async function loadAdminDoctors() { const c = document.getElementById('adminDoctorsList'); c.innerHTML = '<p>Loading...</p>'; try { const r = await fetch(`${API_URL}/api/doctors`); const d = await r.json(); if (d.success) { allDoctors = d.data; c.innerHTML = allDoctors.map(x => `<div class="card" style="margin-bottom:0.5rem;cursor:pointer;display:flex;justify-content:space-between;" onclick="editDoctor('${x._id}')"><div><strong>${x.name}</strong><span style="color:var(--teal);margin-left:8px;">${x.specialization}</span></div><i class="fas fa-edit"></i></div>`).join(''); } } catch(e) {} }
         function editDoctor(id) { const d = allDoctors.find(x => (x._id?.toString()||x._id) === id); if (!d) return; document.getElementById('editDoctorId').value = d._id; document.getElementById('editName').value = d.name||''; document.getElementById('editSpec').value = d.specialization||''; document.getElementById('editDept').value = d.department||''; document.getElementById('editExp').value = d.experience||''; document.getElementById('editEdu').value = d.education||''; document.getElementById('editTime').value = d.timings||''; document.getElementById('editForm').style.display = 'block'; document.getElementById('editForm').scrollIntoView({ behavior: 'smooth' }); }
         async function updateDoctor(e) { e.preventDefault(); const id = document.getElementById('editDoctorId').value; const ud = { name: document.getElementById('editName').value, specialization: document.getElementById('editSpec').value, department: document.getElementById('editDept').value, experience: document.getElementById('editExp').value, education: document.getElementById('editEdu').value, timings: document.getElementById('editTime').value }; const btn = e.target.querySelector('button'); btn.innerHTML = 'Saving...'; btn.disabled = true; try { const r = await fetch(`${API_URL}/doctors/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ud) }); const d = await r.json(); if (d.success) { alert('✅ Updated!'); document.getElementById('editForm').style.display = 'none'; loadAdminDoctors(); } } catch(er) {} btn.innerHTML = 'Save'; btn.disabled = false; }
 
