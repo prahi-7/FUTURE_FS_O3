@@ -1,0 +1,54 @@
+const express = require('express');
+const router = express.Router();
+const Appointment = require('../models/appointment');
+const Doctor = require('../models/doctor');
+const Patient = require('../models/patient');
+const Contact = require('../models/contact');
+
+// GET dashboard stats
+router.get('/stats', async (req, res) => {
+    try {
+        const [
+            totalAppointments,
+            totalDoctors,
+            totalPatients,
+            pendingAppointments,
+            unreadMessages
+        ] = await Promise.all([
+            Appointment.countDocuments(),
+            Doctor.countDocuments({ isActive: true }),
+            Patient.countDocuments(),
+            Appointment.countDocuments({ status: 'pending' }),
+            Contact.countDocuments({ status: 'unread' })
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                totalAppointments,
+                totalDoctors,
+                totalPatients,
+                pendingAppointments,
+                unreadMessages
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET recent appointments
+router.get('/recent', async (req, res) => {
+    try {
+        const appointments = await Appointment.find()
+            .populate('doctor', 'name specialization')
+            .sort({ createdAt: -1 })
+            .limit(10);
+        
+        res.json({ success: true, data: appointments });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+module.exports = router;
